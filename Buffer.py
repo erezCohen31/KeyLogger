@@ -1,6 +1,6 @@
 class Buffer:
     def __init__(self):
-        self.buffer = []
+        self.data = []  # Utilisation cohérente de `data`
         self.max_size = 100
 
     def add_data(self, char):
@@ -13,4 +13,4 @@ class Buffer:
         return self.data
 
     def is_full(self):
-        return len(self.data) > self.max_size
+        return len(self.data) >= self.max_size
