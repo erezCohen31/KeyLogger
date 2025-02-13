@@ -1,6 +1,6 @@
 class Buffer:
     def __init__(self):
-        self.data = []  # Utilisation cohérente de `data`
+        self.data = []
         self.max_size = 100
 
     def add_data(self, char):

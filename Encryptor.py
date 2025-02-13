@@ -1,17 +1,16 @@
 class Encryptor:
-    def __init__(self, key):
+    def __init__(self, key: str):
         self.key = key
 
-    def encrypt(self, text):
-        encrypted_text = ""
-        for char in text:
-            encrypted_char = chr(ord(char) ^ ord(self.key))
-            encrypted_text += encrypted_char
-        return encrypted_text
+    def xor_encrypt(self, data: str) -> str:
+        encrypted_chars = [chr(ord(c) ^ ord(self.key[i % len(self.key)])) for i, c in enumerate(data)]
+        return "".join(encrypted_chars)
 
-    def decrypt(self, encrypted_text):
-        decrypted_text = ""
-        for char in encrypted_text:
-            decrypted_char = chr(ord(char) ^ ord(self.key))
-            decrypted_text += decrypted_char
-        return decrypted_text
+    def encrypt(self, data: str) -> str:
+        encrypted_data = self.xor_encrypt(data)
+        return encrypted_data.encode('utf-8').hex()
+
+    def decrypt(self, encrypted_hex: str) -> str:
+        encrypted_data = bytes.fromhex(encrypted_hex).decode('utf-8')
+        return self.xor_encrypt(encrypted_data)
+
