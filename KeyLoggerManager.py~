@@ -1,9 +1,0 @@
-from KeyService import KeyLoggerService
-import Buffer
-
-
-class KeyLoggerManager:
-    def __init__(self):
-        self.service = KeyLoggerService()
-        self
-    de
