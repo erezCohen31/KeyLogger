@@ -6,4 +6,3 @@ class FileWriter:
         """Écrit du texte dans le fichier"""
         with open(self.filename, "a", encoding="utf-8") as file:
             file.write(text + "\n")
-            print("ecris")
