@@ -1,7 +1,7 @@
 class Buffer:
     def __init__(self):
         self.data = []
-        self.max_size = 100
+        self.max_size = 10
 
     def add_data(self, char):
         self.data.append(char)

@@ -1,8 +1,11 @@
-class FileWriter:
+from IWriter import IWriter
+
+
+class FileWriter(IWriter):
     def __init__(self, filename="log.txt"):
         self.filename = filename
 
-    def write(self, text):
+    def send_data(self, data,name_machine):
         """Écrit du texte dans le fichier"""
         with open(self.filename, "a", encoding="utf-8") as file:
-            file.write(text + "\n")
+            file.write(data + "\n")
