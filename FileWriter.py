@@ -1,3 +1,5 @@
+import json
+
 from IWriter import IWriter
 
 
@@ -5,7 +7,8 @@ class FileWriter(IWriter):
     def __init__(self, filename="log.txt"):
         self.filename = filename
 
-    def send_data(self, data,name_machine):
-        """Écrit du texte dans le fichier"""
+    def send_data(self, data, name_machine):
+
         with open(self.filename, "a", encoding="utf-8") as file:
-            file.write(data + "\n")
+            file.write(json.dumps(data, indent=4)+"\n")
+            print("done")
