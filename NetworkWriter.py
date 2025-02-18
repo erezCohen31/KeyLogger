@@ -1,24 +1,21 @@
 import requests
-import json
 from IWriter import IWriter
 
 
 class NetworkWriter(IWriter):
 
     def send_data(self, data, name_machine):
+        print(type(data))
         try:
-            response = requests.post(name_machine, json=data)  # Envoi direct du JSON
-
-            if response.status_code == 200:
-                print("sent with success !")
+            if isinstance(data, dict):
+                response = requests.post(name_machine, json=data)
+                if response.status_code == 200:
+                    print("Sent with success!")
+                else:
+                    print(f"Error: {response.status_code} - {response.text}")
             else:
-                print(f"error : {response.status_code} - {response.text}")
+                print("Data is not a valid dictionary!")
+                print(type(data))
 
         except requests.exceptions.RequestException as e:
-            print(f"fail to connect : {e}")
-
-
-# Tester l'envoi
-writer = NetworkWriter()
-json_data = {"nom": "Alice", "age": 25, "ville": "Lyon"}
-writer.send_data(json_data, "http://127.0.0.1:5000/upload")
+            print(f"Failed to connect: {e}")

@@ -1,0 +1,101 @@
+body {
+    font-family: "Courier New", monospace;
+    background-color: #0d1117;
+    color: #33ff33;
+    text-align: center;
+    padding: 20px;
+}
+
+h1 {
+    text-shadow: 0 0 10px #33ff33;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: 2px solid #33ff33;
+    background: none;
+    color: #33ff33;
+    font-weight: bold;
+    transition: 0.3s;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #33ff33;
+    color: #0d1117;
+}
+
+.container {
+    margin-top: 20px;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: rgba(51, 255, 51, 0.1);
+    box-shadow: 0 0 10px #33ff33;
+}
+
+th,
+td {
+    border: 1px solid #33ff33;
+    padding: 10px;
+    text-align: left;
+    word-break: break-word;
+}
+
+th {
+    background-color: rgba(51, 255, 51, 0.3);
+}
+
+tr:hover {
+    background-color: rgba(51, 255, 51, 0.2);
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+input {
+    background-color: #0d1117;
+    margin-inline: 10px;
+    color: #33ff33;
+    border: 1px solid #33ff33;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+#loginForm {
+    margin-top: 20px;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: 100px;
+}
+
+button[type="submit"] {
+    margin-top: 200px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: 2px solid #33ff33;
+    background: none;
+    color: #33ff33;
+    font-weight: bold;
+    transition: 0.3s;
+    margin-top: 20px;
+}
