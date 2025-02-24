@@ -36,3 +36,6 @@ class KeyLoggerService(IKeyLogger):
 
     def get_logged_keys(self):
         return self.list_data
+
+    def clear_data(self):
+        self.list_data = []

